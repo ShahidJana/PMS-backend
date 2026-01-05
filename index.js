@@ -33,7 +33,7 @@ app.get('/', (req, res) => res.send('Backend is running 🚀'));
 app.use('/api/auth', authRoutes);
 
 // Protected API routes (CSRF protection applied)
-// app.use('/api', csrfProtection);
+app.use('/api', csrfProtection);
 app.use('/api/users', userRoutes);
 app.use('/api/projects', projectRoutes);
 app.use('/api/tasks', taskRoutes);
