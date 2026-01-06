@@ -13,18 +13,18 @@ export async function register(req, res) {
     const user = await User.create({ name, email, password: hashed });
     const access = signAccess({ id: user._id });
     const refresh = signRefresh({ id: user._id });
-    
+
     // Create token with metadata
-    await Token.create({ 
-      user: user._id, 
-      token: refresh, 
+    await Token.create({
+      user: user._id,
+      token: refresh,
       expiresAt: new Date(Date.now() + 7 * 24 * 3600 * 1000),
       ip: req.ip,
       userAgent: req.headers['user-agent']
     });
-    
+
     setTokenCookies(res, access, refresh);
-    
+
     res.json({ user: { id: user._id, email: user.email, name: user.name, role: user.role } });
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -36,22 +36,31 @@ export async function login(req, res) {
     const { email, password } = req.body;
     const user = await User.findOne({ email }).exec();
     if (!user) return res.status(401).json({ message: 'Invalid credentials' });
+
+    // Check if user is blocked
+    if (user.blocked) {
+      return res.status(403).json({
+        message: 'Your account has been blocked by an administrator. Please contact support for assistance.',
+        blocked: true
+      });
+    }
+
     const ok = await comparePassword(password, user.password);
     if (!ok) return res.status(401).json({ message: 'Invalid password' });
     const access = signAccess({ id: user._id });
     const refresh = signRefresh({ id: user._id });
-    
+
     // Create token with metadata
-    await Token.create({ 
-      user: user._id, 
-      token: refresh, 
+    await Token.create({
+      user: user._id,
+      token: refresh,
       expiresAt: new Date(Date.now() + 7 * 24 * 3600 * 1000),
       ip: req.ip,
       userAgent: req.headers['user-agent']
     });
-    
+
     setTokenCookies(res, access, refresh);
-    
+
     res.json({ user: { id: user._id, email: user.email, name: user.name, role: user.role } });
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -62,7 +71,7 @@ export async function refreshToken(req, res) {
   try {
     const refresh = req.cookies.refresh_token;
     if (!refresh) return res.status(400).json({ message: 'Refresh token required' });
-    
+
     const payload = verifyRefresh(refresh);
     const tokenEntry = await Token.findOne({ token: refresh }).exec();
 
@@ -88,9 +97,9 @@ export async function refreshToken(req, res) {
       tokenEntry.replacedByToken = newRefresh;
       await tokenEntry.save({ session });
 
-      await Token.create([{ 
-        user: payload.id, 
-        token: newRefresh, 
+      await Token.create([{
+        user: payload.id,
+        token: newRefresh,
         expiresAt: new Date(Date.now() + 7 * 24 * 3600 * 1000),
         ip: req.ip,
         userAgent: req.headers['user-agent']
@@ -98,7 +107,7 @@ export async function refreshToken(req, res) {
     });
 
     setTokenCookies(res, newAccess, newRefresh);
-    
+
     res.json({ message: 'Token refreshed successfully' });
   } catch (err) {
     res.status(401).json({ message: 'Invalid token', error: err.message });
@@ -113,7 +122,7 @@ function setTokenCookies(res, access, refresh) {
     sameSite: 'strict',
     maxAge: 15 * 60 * 1000 // 15 minutes
   });
-  
+
   res.cookie('refresh_token', refresh, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',

@@ -18,6 +18,7 @@ const UserSchema = new Schema(
         },
         password: { type: String, required: true, minlength: 8 },
         role: { type: String, enum: ["member", "admin", "pm"], default: "member" },
+        blocked: { type: Boolean, default: false },
         lastLogin: { type: Date },
     },
     { timestamps: true }

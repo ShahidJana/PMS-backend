@@ -10,6 +10,7 @@ import taskRoutes from './routes/tasks.js';
 import activityRoutes from './routes/activity.js';
 import analyticsRoutes from './routes/analytics.js';
 import dashboardRoutes from './routes/dashboard.js';
+import notificationRoutes from './routes/notifications.js';
 import { apiLimiter } from './middlewares/rateLimiter.js';
 import { csrfTokenMiddleware, csrfProtection } from './middlewares/csrf.js';
 
@@ -18,7 +19,7 @@ dotenv.config();
 const app = express();
 app.use(cors({
   origin: [process.env.FRONTEND_URL, 'http://localhost:5173'],
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-XSRF-TOKEN'],
   credentials: true
 }));
@@ -40,6 +41,7 @@ app.use('/api/tasks', taskRoutes);
 app.use('/api/activity', activityRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 const PORT = process.env.PORT || 5000;
 

@@ -10,6 +10,7 @@ const ProjectSchema = new Schema(
 		members: [{ type: Schema.Types.ObjectId, ref: "User", index: true }],
 		startDate: { type: Date },
 		dueDate: { type: Date },
+		status: { type: String, enum: ['active', 'completed'], default: 'active', index: true },
 		meta: { type: Schema.Types.Mixed },
 	},
 	{ timestamps: true }

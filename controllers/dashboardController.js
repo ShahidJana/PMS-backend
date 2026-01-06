@@ -11,6 +11,8 @@ export async function getDashboardOverview(req, res) {
         if (user.role === 'admin') {
             stats.totalUsers = await User.countDocuments({ deleted: false });
             stats.totalProjects = await Project.countDocuments({ deleted: false });
+            stats.activeTasks = await Task.countDocuments({ status: 'todo', deleted: false });
+            stats.completedTasks = await Task.countDocuments({ status: 'done', deleted: false });
             stats.totalTasks = await Task.countDocuments({ deleted: false });
             stats.blockedTasks = await Task.countDocuments({ status: 'blocked', deleted: false });
 
@@ -90,6 +92,7 @@ export async function getDashboardOverview(req, res) {
                         description: 1,
                         startDate: 1,
                         dueDate: 1,
+                        status: 1,
                         meta: 1,
                         createdAt: 1,
                         updatedAt: 1,
@@ -125,6 +128,10 @@ export async function getDashboardOverview(req, res) {
             stats.activeTasks = await Task.countDocuments({
                 project: { $in: projectIds },
                 status: { $in: ['todo', 'in-progress'] },
+                deleted: false
+            });
+            stats.totalTasks = await Task.countDocuments({
+                project: { $in: projectIds },
                 deleted: false
             });
             stats.blockedTasks = await Task.countDocuments({
